@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title">AI Travel Planner - GDG Hackathon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .chat-bubble {
+            animation: fadeInUp 0.3s ease-out;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .mode-toggle {
+            transition: all 0.3s ease;
+        }
+        .luxury-mode {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+        }
+        .budget-mode {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Header -->
+    <header class="glass-effect p-4 mb-8">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-white flex items-center">
+                <i class="fas fa-plane mr-3"></i>
+                <span data-i18n="title">AI Travel Planner</span>
+            </h1>
+            <div class="flex items-center space-x-4">
+                <select id="languageSelect" class="bg-white/20 text-white px-4 py-2 rounded-full border border-white/30 focus:border-white focus:outline-none">
+                    <option value="en">English</option>
+                    <option value="hi">हिन्दी</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                </select>
+                <div class="mode-toggle budget-mode px-4 py-2 rounded-full text-white font-semibold cursor-pointer" id="modeToggle">
+                    <i class="fas fa-wallet mr-2"></i>
+                    <span id="modeText" data-i18n="budgetMode">Budget Mode</span>
+                </div>
+                <button id="voiceChatBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition-colors">
+                    <i class="fas fa-microphone mr-2"></i>
+                    <span data-i18n="voiceChat">Voice Chat</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <div class="container mx-auto px-4 max-w-6xl">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Input Form -->
+            <div class="glass-effect rounded-2xl p-6">
+                <h2 class="text-xl font-bold text-white mb-6 flex items-center">
+                    <i class="fas fa-edit mr-3"></i>
+                    <span data-i18n="travelDetails">Travel Details</span>
+                </h2>
+                
+                <form id="travelForm" class="space-y-4">
+                    <div>
+                        <label class="block text-white font-medium mb-2" data-i18n="travelDates">Travel Dates</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="date" id="startDate" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white focus:outline-none" required>
+                            <input type="date" id="endDate" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white focus:outline-none" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-white font-medium mb-2" data-i18n="numberOfPeople">Number of People</label>
+                        <input type="number" id="numPeople" min="1" max="20" value="2" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white focus:outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-white font-medium mb-2" data-i18n="budget">Budget (₹)</label>
+                        <input type="number" id="budget" min="1000" placeholder="50000" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white focus:outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-white font-medium mb-2" data-i18n="destination">Destination (you can add multiple places)</label>
+                        <input type="text" id="destination" placeholder data-i18n="destinationPlaceholder" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white focus:outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-white font-medium mb-2" data-i18n="preferences">Preferences</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="adventure" class="mr-2">
+                                <span data-i18n="adventure">Adventure</span>
+                            </label>
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="culture" class="mr-2">
+                                <span data-i18n="culture">Culture</span>
+                            </label>
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="food" class="mr-2">
+                                <span data-i18n="food">Food</span>
+                            </label>
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="relaxation" class="mr-2">
+                                <span data-i18n="relaxation">Relaxation</span>
+                            </label>
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="photography" class="mr-2">
+                                <span data-i18n="photography">Photography</span>
+                            </label>
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="nightlife" class="mr-2">
+                                <span data-i18n="nightlife">Nightlife</span>
+                            </label>
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="beaches" class="mr-2">
+                                <span data-i18n="beaches">Beaches</span>
+                            </label>
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="historical" class="mr-2">
+                                <span data-i18n="historical">Historical Sites</span>
+                            </label>
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="shopping" class="mr-2">
+                                <span data-i18n="shopping">Shopping</span>
+                            </label>
+                            <label class="flex items-center text-white">
+                                <input type="checkbox" value="nature" class="mr-2">
+                                <span data-i18n="nature">Nature</span>
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105">
+                        <i class="fas fa-magic mr-2"></i>
+                        <span data-i18n="generateItinerary">Generate Itinerary</span>
+                    </button>
+                </form>
+            </div>
+            <!-- Itinerary Display -->
+            <div class="glass-effect rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i class="fas fa-map-marked-alt mr-3"></i>
+                        <span data-i18n="yourItinerary">Your Itinerary</span>
+                    </h2>
+                    <button id="downloadBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors opacity-0 pointer-events-none" disabled>
+                        <i class="fas fa-download mr-2"></i>
+                        <span data-i18n="download">Download</span>
+                    </button>
+                </div>
+                <div id="itineraryContent" class="text-white">
+                    <div class="text-center py-12 text-white/70">
+                        <i class="fas fa-route text-4xl mb-4"></i>
+                        <p class="text-lg" data-i18n="fillDetails">Fill in your travel details to generate your personalized itinerary</p>
+                    </div>
+                </div>
+                <!-- Refine Input Section -->
+                <div id="refineSection" class="mt-6 hidden">
+                    <h3 class="text-lg font-bold text-white mb-4" data-i18n="refineTitle">Refine Your Itinerary</h3>
+                    <textarea id="refineInput" rows="4" placeholder data-i18n="refinePlaceholder" class="w-full px-4 py-3 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white focus:outline-none resize-none"></textarea>
+                    <button id="refineBtn" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all">
+                        <span data-i18n="submitRefinement">Submit Refinement</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Voice Chat Modal -->
+        <div id="voiceChatModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+            <div class="glass-effect rounded-2xl p-6 max-w-md w-full mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white" data-i18n="voiceAssistant">Voice Assistant</h3>
+                    <button id="closeVoiceChat" class="text-white/70 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div id="chatMessages" class="h-64 overflow-y-auto mb-4 space-y-3">
+                    <div class="chat-bubble bg-blue-600/30 rounded-lg p-3 text-white">
+                        <i class="fas fa-robot mr-2"></i>
+                        <span data-i18n="chatWelcome">Hi! I'm your AI travel assistant. You can speak to me or type your travel preferences!</span>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <input type="text" id="chatInput" placeholder data-i18n="chatPlaceholder" class="flex-1 px-4 py-2 rounded-lg bg-white/20 text-white placeholder-white/70 border border-white/30 focus:border-white focus:outline-none">
+                    <button id="sendMessage" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                    <button id="voiceBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Translations
+        const translations = {
+            en: {
+                title: "AI Travel Planner",
+                travelDetails: "Travel Details",
+                generateItinerary: "Generate Itinerary",
+                yourItinerary: "Your Itinerary",
+                budgetMode: "Budget Mode",
+                luxuryMode: "Luxury Mode",
+                travelDates: "Travel Dates",
+                numberOfPeople: "Number of People",
+                budget: "Budget (₹)",
+                destination: "Destination",
+                preferences: "Preferences",
+                adventure: "Adventure",
+                culture: "Culture",
+                food: "Food",
+                relaxation: "Relaxation",
+                photography: "Photography",
+                nightlife: "Nightlife",
+                beaches: "Beaches",
+                historical: "Historical Sites",
+                shopping: "Shopping",
+                nature: "Nature",
+                voiceChat: "Voice Chat",
+                download: "Download",
+                fillDetails: "Fill in your travel details to generate your personalized itinerary",
+                refineTitle: "Refine Your Itinerary",
+                refinePlaceholder: "Enter your feedback or additional preferences (e.g., 'add more adventure activities' or 'make flights cheaper')...",
+                submitRefinement: "Submit Refinement",
+                voiceAssistant: "Voice Assistant",
+                chatWelcome: "Hi! I'm your AI travel assistant. You can speak to me or type your travel preferences!",
+                chatPlaceholder: "Type your message...",
+                destinationPlaceholder: "e.g., Goa, Kerala, Rajasthan"
+            },
+            hi: {
+                title: "AI यात्रा योजनाकार",
+                travelDetails: "यात्रा विवरण",
+                generateItinerary: "यात्रा कार्यक्रम उत्पन्न करें",
+                yourItinerary: "आपका यात्रा कार्यक्रम",
+                budgetMode: "बजट मोड",
+                luxuryMode: "लक्जरी मोड",
+                travelDates: "यात्रा तिथियां",
+                numberOfPeople: "लोगों की संख्या",
+                budget: "बजट (₹)",
+                destination: "गंतव्य",
+                preferences: "प्राथमिकताएं",
+                adventure: "साहसिक",
+                culture: "संस्कृति",
+                food: "खाना",
+                relaxation: "रिलैक्सेशन",
+                photography: "फोटोग्राफी",
+                nightlife: "नाइटलाइफ",
+                beaches: "समुद्र तट",
+                historical: "ऐतिहासिक स्थल",
+                shopping: "शॉपिंग",
+                nature: "प्रकृति",
+                voiceChat: "वॉइस चैट",
+                download: "डाउनलोड",
+                fillDetails: "अपने यात्रा विवरण भरें ताकि आपका व्यक्तिगत यात्रा कार्यक्रम उत्पन्न हो सके",
+                refineTitle: "अपने यात्रा कार्यक्रम को परिष्कृत करें",
+                refinePlaceholder: "अपना फीडबैक या अतिरिक्त प्राथमिकताएं दर्ज करें (उदाहरण के लिए, 'अधिक साहसिक गतिविधियां जोड़ें' या 'उड़ानें सस्ती बनाएं')...",
+                submitRefinement: "परिष्करण सबमिट करें",
+                voiceAssistant: "वॉइस असिस्टेंट",
+                chatWelcome: "हाय! मैं आपका AI यात्रा सहायक हूं। आप मुझसे बोल सकते हैं या अपनी यात्रा प्राथमिकताओं को टाइप कर सकते हैं!",
+                chatPlaceholder: "अपना संदेश टाइप करें...",
+                destinationPlaceholder: "उदाहरण के लिए, गोवा, केरल, राजस्थान"
+            },
+            es: {
+                title: "Planificador de viajes de IA",
+                travelDetails: "Detalles del viaje",
+                generateItinerary: "Generar itinerario",
+                yourItinerary: "Tu itinerario",
+                budgetMode: "Modo presupuesto",
+                luxuryMode: "Modo lujo",
+                travelDates: "Fechas de viaje",
+                numberOfPeople: "Número de personas",
+                budget: "Presupuesto (₹)",
+                destination: "Destino",
+                preferences: "Preferencias",
+                adventure: "Aventura",
+                culture: "Cultura",
+                food: "Comida",
+                relaxation: "Relajación",
+                photography: "Fotografía",
+                nightlife: "Vida nocturna",
+                beaches: "Playas",
+                historical: "Sitios históricos",
+                shopping: "Compras",
+                nature: "Naturaleza",
+                voiceChat: "Chat de voz",
+                download: "Descargar",
+                fillDetails: "Llena los detalles de tu viaje para generar tu itinerario personalizado",
+                refineTitle: "Refina tu itinerario",
+                refinePlaceholder: "Ingresa tu retroalimentación o preferencias adicionales (por ejemplo, 'agrega más actividades de aventura' o 'haz los vuelos más baratos')...",
+                submitRefinement: "Enviar refinamiento",
+                voiceAssistant: "Asistente de voz",
+                chatWelcome: "¡Hola! Soy tu asistente de viajes con IA. ¡Puedes hablarme o escribir tus preferencias de viaje!",
+                chatPlaceholder: "Escribe tu mensaje...",
+                destinationPlaceholder: "p. ej., Goa, Kerala, Rajasthan"
+            },
+            fr: {
+                title: "Planificateur de voyages IA",
+                travelDetails: "Détails de voyage",
+                generateItinerary: "Générer un itinéraire",
+                yourItinerary: "Votre itinéraire",
+                budgetMode: "Mode budget",
+                luxuryMode: "Mode luxe",
+                travelDates: "Dates de voyage",
+                numberOfPeople: "Nombre de personnes",
+                budget: "Budget (₹)",
+                destination: "Destination",
+                preferences: "Préférences",
+                adventure: "Aventure",
+                culture: "Culture",
+                food: "Nourriture",
+                relaxation: "Détente",
+                photography: "Photographie",
+                nightlife: "Vie nocturne",
+                beaches: "Plages",
+                historical: "Sites historiques",
+                shopping: "Shopping",
+                nature: "Nature",
+                voiceChat: "Chat vocal",
+                download: "Télécharger",
+                fillDetails: "Remplissez les détails de votre voyage pour générer votre itinéraire personnalisé",
+                refineTitle: "Affiner votre itinéraire",
+                refinePlaceholder: "Entrez votre retour ou préférences supplémentaires (par exemple, 'ajoutez plus d'activités d'aventure' ou 'rendez les vols moins chers')...",
+                submitRefinement: "Soumettre le raffinement",
+                voiceAssistant: "Assistant vocal",
+                chatWelcome: "Salut ! Je suis votre assistant de voyage IA. Vous pouvez me parler ou taper vos préférences de voyage !",
+                chatPlaceholder: "Tapez votre message...",
+                destinationPlaceholder: "par exemple, Goa, Kerala, Rajasthan"
+            },
+            de: {
+                title: "KI-Reiseplaner",
+                travelDetails: "Reisedetails",
+                generateItinerary: "Itinerar generieren",
+                yourItinerary: "Ihr Itinerar",
+                budgetMode: "Budget-Modus",
+                luxuryMode: "Luxus-Modus",
+                travelDates: "Reisedaten",
+                numberOfPeople: "Anzahl der Personen",
+                budget: "Budget (₹)",
+                destination: "Reiseziel",
+                preferences: "Vorlieben",
+                adventure: "Abenteuer",
+                culture: "Kultur",
+                food: "Essen",
+                relaxation: "Entspannung",
+                photography: "Fotografie",
+                nightlife: "Nachtleben",
+                beaches: "Strände",
+                historical: "Historische Stätten",
+                shopping: "Einkaufen",
+                nature: "Natur",
+                voiceChat: "Sprachchat",
+                download: "Herunterladen",
+                fillDetails: "Füllen Sie Ihre Reisedetails aus, um Ihren personalisierten Reiseplan zu generieren",
+                refineTitle: "Verfeinern Sie Ihren Reiseplan",
+                refinePlaceholder: "Geben Sie Ihr Feedback oder zusätzliche Vorlieben ein (z. B. 'fügen Sie mehr Abenteueraktivitäten hinzu' oder 'machen Sie Flüge günstiger')...",
+                submitRefinement: "Verfeinerung senden",
+                voiceAssistant: "Sprachassistent",
+                chatWelcome: "Hallo! Ich bin Ihr KI-Reiseassistent. Sie können mit mir sprechen oder Ihre Reisevorlieben tippen!",
+                chatPlaceholder: "Tippen Sie Ihre Nachricht...",
+                destinationPlaceholder: "z. B. Goa, Kerala, Rajasthan"
+            }
+        };
+
+        // Global state
+        let currentMode = 'budget';
+        let isListening = false;
+        let recognition = null;
+        let lastFormData = null;
+        let currentLang = 'en';
+
+        // Language handling
+        const languageSelect = document.getElementById('languageSelect');
+        languageSelect.addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            updateLanguage();
+            if (recognition) {
+                recognition.lang = getLangCode(currentLang);
+            }
+        });
+
+        function getLangCode(lang) {
+            const codes = {
+                en: 'en-US',
+                hi: 'hi-IN',
+                es: 'es-ES',
+                fr: 'fr-FR',
+                de: 'de-DE'
+            };
+            return codes[lang] || 'en-US';
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    if (el.tagName === 'INPUT' && el.placeholder) {
+                        el.placeholder = translations[currentLang][key];
+                    } else {
+                        el.textContent = translations[currentLang][key];
+                    }
+                }
+            });
+            // Update mode text
+            const modeText = document.getElementById('modeText');
+            if (currentMode === 'budget') {
+                modeText.textContent = translations[currentLang].budgetMode;
+            } else {
+                modeText.innerHTML = `<i class="fas fa-crown mr-2"></i>${translations[currentLang].luxuryMode}`;
+            }
+        }
+
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = getLangCode(currentLang);
+        }
+
+        // DOM elements
+        const modeToggle = document.getElementById('modeToggle');
+        const modeText = document.getElementById('modeText');
+        const voiceChatBtn = document.getElementById('voiceChatBtn');
+        const voiceChatModal = document.getElementById('voiceChatModal');
+        const closeVoiceChat = document.getElementById('closeVoiceChat');
+        const travelForm = document.getElementById('travelForm');
+        const itineraryContent = document.getElementById('itineraryContent');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendMessage = document.getElementById('sendMessage');
+        const voiceBtn = document.getElementById('voiceBtn');
+        const refineSection = document.getElementById('refineSection');
+        const refineInput = document.getElementById('refineInput');
+        const refineBtn = document.getElementById('refineBtn');
+
+        // Backend call helper
+        async function callBackend(endpoint, data) {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+                throw new Error(`Backend request failed: ${response.status}`);
+            }
+            return await response.json();
+        }
+
+        // Mode toggle functionality
+        modeToggle.addEventListener('click', () => {
+            currentMode = currentMode === 'budget' ? 'luxury' : 'budget';
+            updateModeDisplay();
+            if (lastFormData) {
+                generateItinerary(lastFormData);
+            }
+        });
+
+        function updateModeDisplay() {
+            if (currentMode === 'luxury') {
+                modeToggle.className = 'mode-toggle luxury-mode px-4 py-2 rounded-full text-white font-semibold cursor-pointer';
+                modeText.innerHTML = `<i class="fas fa-crown mr-2"></i>${translations[currentLang].luxuryMode}`;
+            } else {
+                modeToggle.className = 'mode-toggle budget-mode px-4 py-2 rounded-full text-white font-semibold cursor-pointer';
+                modeText.innerHTML = `<i class="fas fa-wallet mr-2"></i>${translations[currentLang].budgetMode}`;
+            }
+        }
+
+        // Voice chat modal
+        voiceChatBtn.addEventListener('click', () => {
+            voiceChatModal.classList.remove('hidden');
+            voiceChatModal.classList.add('flex');
+        });
+
+        closeVoiceChat.addEventListener('click', () => {
+            voiceChatModal.classList.add('hidden');
+            voiceChatModal.classList.remove('flex');
+        });
+
+        // Chat functionality
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-bubble ${isUser ? 'bg-purple-600/30 ml-8' : 'bg-blue-600/30 mr-8'} rounded-lg p-3 text-white`;
+            messageDiv.innerHTML = `
+                <i class="fas fa-${isUser ? 'user' : 'robot'} mr-2"></i>
+                ${message}
+            `;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function processAIResponse(userInput) {
+            try {
+                const data = await callBackend('/ask', { message: userInput, lang: currentLang });
+                addMessage(data.reply);
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage("Sorry, I couldn't process that right now. Please try again.");
+            }
+        }
+
+        sendMessage.addEventListener('click', () => {
+            const message = chatInput.value.trim();
+            if (message) {
+                addMessage(message, true);
+                chatInput.value = '';
+                processAIResponse(message);
+            }
+        });
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage.click();
+            }
+        });
+
+        // Voice recognition
+        voiceBtn.addEventListener('click', () => {
+            if (!recognition) {
+                addMessage("Sorry, speech recognition is not supported in your browser.");
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                voiceBtn.classList.remove('bg-red-700');
+                voiceBtn.classList.add('bg-red-600');
+            } else {
+                recognition.start();
+                isListening = true;
+                voiceBtn.innerHTML = '<i class="fas fa-stop pulse-dot"></i>';
+                voiceBtn.classList.remove('bg-red-600');
+                voiceBtn.classList.add('bg-red-700');
+                addMessage("Listening... Please speak now.");
+            }
+        });
+
+        if (recognition) {
+            recognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                addMessage(transcript, true);
+                await processAIResponse(transcript);
+                isListening = false;
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                voiceBtn.classList.remove('bg-red-700');
+                voiceBtn.classList.add('bg-red-600');
+            };
+            recognition.onerror = () => {
+                addMessage("Sorry, I couldn't hear you clearly. Please try again.");
+                isListening = false;
+                voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+                voiceBtn.classList.remove('bg-red-700');
+                voiceBtn.classList.add('bg-red-600');
+            };
+        }
+
+        // Form submission and itinerary generation
+        travelForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await generateItinerary();
+        });
+
+        // Refine button listener
+        refineBtn.addEventListener('click', async () => {
+            const refinement = refineInput.value.trim();
+            if (refinement && lastFormData) {
+                lastFormData.refinement = (lastFormData.refinement || '') + ' ' + refinement;
+                await generateItinerary(lastFormData);
+                refineInput.value = '';
+            }
+        });
+
+        async function generateItinerary(refinedData = null) {
+            const formData = refinedData || {
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                numPeople: document.getElementById('numPeople').value,
+                budget: document.getElementById('budget').value,
+                destination: document.getElementById('destination').value,
+                preferences: Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value).join(','),
+                refinement: '',
+                mode: currentMode,
+                lang: currentLang
+            };
+
+            if (!formData.startDate || !formData.endDate || !formData.destination) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Store form data for refinement
+            lastFormData = formData;
+
+            try {
+                // Show loading
+                itineraryContent.innerHTML = '<div class="text-center py-12 text-white/70"><i class="fas fa-spinner fa-spin text-4xl mb-4"></i><p class="text-lg">Generating your itinerary with AI...</p></div>';
+
+                const backendData = await callBackend('/generate', formData);
+
+                if (backendData.error) {
+                    throw new Error(backendData.error);
+                }
+
+                // Display the AI-generated HTML
+                displayItinerary(backendData.itinerary, formData);
+
+                // Enable download button and refine section
+                downloadBtn.classList.remove('opacity-0', 'pointer-events-none');
+                downloadBtn.disabled = false;
+                refineSection.classList.remove('hidden');
+            } catch (error) {
+                console.error('Error:', error);
+                itineraryContent.innerHTML = `<div class="text-center py-12 text-red-400"><p class="text-lg">Error generating itinerary: ${error.message}. Please try again.</p></div>`;
+            }
+        }
+
+        function displayItinerary(aiHtml, formData) {
+            const modeName = formData.mode.charAt(0).toUpperCase() + formData.mode.slice(1);
+            let html = `
+                <div class="mb-6 p-4 bg-white/10 rounded-lg">
+                    <h3 class="text-lg font-bold mb-2">${formData.destination} Trip - ${modeName} Mode</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div><strong>Dates:</strong> ${formData.startDate} to ${formData.endDate}</div>
+                        <div><strong>People:</strong> ${formData.numPeople}</div>
+                        <div><strong>Budget:</strong> ₹${parseInt(formData.budget).toLocaleString()}</div>
+                        <div><strong>Mode:</strong> ${modeName}</div>
+                    </div>
+                </div>
+            `;
+            html += aiHtml;
+            html += `
+                <div class="mt-6 p-4 bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-lg border border-green-400/30">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-green-400 mb-1">Ready to book your trip?</h4>
+                            <p class="text-sm text-white/80">Download your complete itinerary and start planning!</p>
+                        </div>
+                        <button onclick="downloadItinerary()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-check mr-2"></i>
+                            Confirm Itinerary
+                        </button>
+                    </div>
+                </div>
+            `;
+            itineraryContent.innerHTML = html;
+        }
+
+        // Download functionality
+        function downloadItinerary() {
+            const itineraryData = itineraryContent.innerHTML;
+            const formData = lastFormData;
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Travel Itinerary - ${formData.destination}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+                        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+                        .header { text-align: center; margin-bottom: 30px; color: #333; }
+                        .day { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+                        .section { margin-bottom: 10px; }
+                        .section h5 { color: #666; margin-bottom: 5px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>AI Travel Itinerary</h1>
+                            <h2>${formData.destination} Trip</h2>
+                            <p>${formData.startDate} to ${formData.endDate} | ${formData.numPeople} People | ₹${parseInt(formData.budget).toLocaleString()} Budget</p>
+                            <p><strong>Mode:</strong> ${formData.mode.charAt(0).toUpperCase() + formData.mode.slice(1)}</p>
+                        </div>
+                        ${itineraryData}
+                    </div>
+                </body>
+                </html>
+            `;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${formData.destination}_Itinerary_${formData.startDate}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('Your itinerary has been downloaded successfully!');
+        }
+
+        downloadBtn.addEventListener('click', downloadItinerary);
+
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').min = today;
+        document.getElementById('endDate').min = today;
+
+        // Update end date minimum when start date changes
+        document.getElementById('startDate').addEventListener('change', function() {
+            document.getElementById('endDate').min = this.value;
+        });
+
+        // Initial language update
+        updateLanguage();
+    </script>
+</body>
+</html>

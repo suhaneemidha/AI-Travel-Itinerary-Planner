@@ -33,8 +33,8 @@ class VoiceAssistant:
             self.tts_engine = None
 
     def _setup_apis(self):
-        self.gemini_api_key = "AIzaSyABGzhkOOwW8jKUW5QgLedd0ApJDiheW9o"
-        self.gemini_api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        self.gemini_api_key = ""
+        self.gemini_api_url = ""
 
     def _setup_responses(self):
         self.responses = {
